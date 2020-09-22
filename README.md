@@ -22,4 +22,4 @@ You can specify the website by adding following prefix at the begining of text t
 | b> | baidu |
 | d> | DeepL |
 
-If prefix is not set, translate it by using 'baidu' as default.
+If prefix is not set, translate it by using both translator as default.
