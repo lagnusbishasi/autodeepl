@@ -16,7 +16,6 @@ class Translator {
       deepl: null,
       baidu: null
     };
-    this.results = [];
 
     this._initialize();
   }
@@ -34,19 +33,19 @@ class Translator {
 
     switch (copiedText.slice(0, 2)) {
       case 'd>':
-        this.results = await this.translateByDeepl(copiedText.slice(2));
+        await this.translateByDeepl(copiedText.slice(2));
         break;
       case 'b>':
-        this.results = await this.translateByBaidu(copiedText.slice(2));
+        await this.translateByBaidu(copiedText.slice(2));
         break;
       default:
-        this.results = await this.translateByBaidu(copiedText);
+        await Promise.all([
+          this.translateByDeepl(copiedText),
+          this.translateByBaidu(copiedText)
+        ])
         break;
     }
 
-    const suffix = this.results.length > 1 ? ` ...` : '';
-
-    console.log(await this.results[0].evaluate(node => node.innerText) + suffix);
     console.log("")
   }
 
@@ -56,7 +55,10 @@ class Translator {
     await this.page.deepl.waitForFunction(`document.querySelector('[dl-test="translator-target-input"]').value`);
     await this.page.deepl.waitForFunction(`document.querySelector('[dl-test="translator-target-input"]').value.length > 0`);
 
-    return await this.page.deepl.$$('.lmt__translations_as_text__text_btn')
+    const results =  await this.page.deepl.$$('.lmt__translations_as_text__text_btn')
+    const suffix = results.length > 1 ? ` ...` : '';
+
+    console.log(await results[0].evaluate(node => node.innerText) + suffix);
   }
 
   async translateByBaidu(targetText) {
@@ -64,15 +66,17 @@ class Translator {
     await this.page.baidu.waitForFunction(`document.querySelector('.target-output')`);
     await this.page.baidu.waitForFunction(`document.querySelector('.target-output > span')`);
 
-    const result = await this.page.baidu.$$('.target-output > span');
+    const results = await this.page.baidu.$$('.target-output > span');
 
-    for (const span of result) {
+    console.log(await results[0].evaluate(node => node.innerText));
+
+    for (const span of results) {
       span.evaluate(node => {
         node.parentNode.removeChild(node)
       })
     }
 
-    return result
+    return results
   }
 
   async keepTranslating() {
