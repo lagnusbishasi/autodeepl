@@ -1,5 +1,5 @@
 {
-  "name": "autodeepl",
+  "name": "autotranslator",
   "version": "0.0.1",
   "description": "Observe Clipboard and auto translate it by DeepL",
   "main": "index.js",
