@@ -2,45 +2,51 @@ const puppeteer = require('puppeteer');
 const cp = require('copy-paste');
 const readline = require('readline');
 
-const LANGUAGE_FROM = "zh"
+const LANGUAGE_FROM = "zh";
 
 const URL = {
   deepl: `https://www.deepl.com/ja/translator#${LANGUAGE_FROM}/ja/`,
   baidu: `https://fanyi.baidu.com/#${LANGUAGE_FROM}/jp/`
-}
+};
 
 class Translator {
   constructor() {
-    this.browser = null
+    this.browser = null;
     this.page = {
       deepl: null,
       baidu: null
-    }
-    this.results = []
+    };
+    this.results = [];
 
-    this._initialize()
+    this._initialize();
   }
 
   async _initialize() {
-    this.browser = await puppeteer.launch()
+    this.browser = await puppeteer.launch();
+
     for (const key in this.page) {
-      this.page[key] = await this.browser.newPage()
+      this.page[key] = await this.browser.newPage();
     }
   }
 
   async translate() {
     const copiedText = await this._getTextFromClipBoard()
 
-    if (copiedText.slice(0, 2) == 'd_') {
-      this.results = await this.translateByDeepl(copiedText.slice(2))
-    }
-    else {
-      this.results = await this.translateByBaidu(copiedText)
+    switch (copiedText.slice(0, 2)) {
+      case 'd>':
+        this.results = await this.translateByDeepl(copiedText.slice(2));
+        break;
+      case 'b>':
+        this.results = await this.translateByBaidu(copiedText.slice(2));
+        break;
+      default:
+        this.results = await this.translateByBaidu(copiedText);
+        break;
     }
 
-    const suffix = this.results.length > 1 ? ` ...` : ''
+    const suffix = this.results.length > 1 ? ` ...` : '';
 
-    console.log(await this.results[0].evaluate(node => node.innerText) + suffix)
+    console.log(await this.results[0].evaluate(node => node.innerText) + suffix);
     console.log("")
   }
 
@@ -55,12 +61,10 @@ class Translator {
 
   async translateByBaidu(targetText) {
     await this.page.baidu.goto(`${URL.baidu}${targetText}`);
-
     await this.page.baidu.waitForFunction(`document.querySelector('.target-output')`);
-
     await this.page.baidu.waitForFunction(`document.querySelector('.target-output > span')`);
 
-    const result = await this.page.baidu.$$('.target-output > span')
+    const result = await this.page.baidu.$$('.target-output > span');
 
     for (const span of result) {
       span.evaluate(node => {
@@ -73,14 +77,14 @@ class Translator {
 
   async keepTranslating() {
     while (true)
-      await this.translate()
+      await this.translate();
   }
 
   _getTextFromClipBoard() {
     const line = readline.createInterface({
       input: process.stdin,
       output: process.stdout
-    })
+    });
 
     return new Promise((resolve, reject) => {
       line.question(': ', answer => {
@@ -96,9 +100,9 @@ class Translator {
 }
 
 (async () => {
-  const translater = new Translator()
+  const translater = new Translator();
 
-  await translater.keepTranslating()
+  await translater.keepTranslating();
 
-  await translater.close()
+  await translater.close();
 })();
