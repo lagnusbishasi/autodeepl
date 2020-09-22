@@ -1,4 +1,4 @@
-# Hapax Legomenon Page
+# Auto DeepL
 
 ## Abstract
 This is the tool to translate ch to jp using DeepL Trasnlator free version.
