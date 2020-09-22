@@ -68,7 +68,9 @@ class Translator {
 
     const results = await this.page.baidu.$$('.target-output > span');
 
-    console.log(await results[0].evaluate(node => node.innerText));
+    const strs = await Promise.all(results.map(res => res.evaluate(node => node.innerText)))
+
+    console.log(strs.join(''))
 
     for (const span of results) {
       span.evaluate(node => {
