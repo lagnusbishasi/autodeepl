@@ -1,6 +1,6 @@
-const puppeteer = require('puppeteer');
-const cp = require('copy-paste');
-const readline = require('readline');
+import puppeteer from 'puppeteer';
+import readline from 'readline';
+import chalk from 'chalk';
 
 const LANGUAGE_FROM = "zh";
 
@@ -58,7 +58,9 @@ class Translator {
     const results =  await this.page.deepl.$$('.lmt__translations_as_text__text_btn')
     const suffix = results.length > 1 ? ` ...` : '';
 
-    console.log(await results[0].evaluate(node => node.innerText) + suffix);
+    const tranlatedText = await results[0].evaluate(node => node.innerText) + suffix;
+
+    console.log(chalk.hex('#9aaab5')(tranlatedText));
   }
 
   async translateByBaidu(targetText) {
@@ -68,9 +70,11 @@ class Translator {
 
     const results = await this.page.baidu.$$('.target-output > span');
 
-    const strs = await Promise.all(results.map(res => res.evaluate(node => node.innerText)))
+    const strs = await Promise.all(results.map(res => res.evaluate(node => node.innerText)));
 
-    console.log(strs.join(''))
+    const translatedText = strs.join('');
+
+    console.log(chalk.white(translatedText));
 
     for (const span of results) {
       span.evaluate(node => {
@@ -110,5 +114,5 @@ class Translator {
 
   await translater.keepTranslating();
 
-  await translater.close();
+  translater.close();
 })();
