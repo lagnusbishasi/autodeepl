@@ -3,6 +3,7 @@ import readline from 'readline';
 import chalk from 'chalk';
 
 const LANGUAGE_FROM = "zh";
+const DEFAULT_TIMEOUT = '15000';
 
 const URL = {
   deepl: `https://www.deepl.com/ja/translator#${LANGUAGE_FROM}/ja/`,
@@ -25,6 +26,7 @@ class Translator {
 
     for (const key in this.page) {
       this.page[key] = await this.browser.newPage();
+      this.page[key].setDefaultTimeout(DEFAULT_TIMEOUT);
     }
   }
 
@@ -52,8 +54,12 @@ class Translator {
   async translateByDeepl(targetText) {
     await this.page.deepl.goto(`${URL.deepl}${targetText}`);
     await this.page.deepl.waitForFunction(`document.querySelector('[dl-test="translator-target-input"]')`);
-    await this.page.deepl.waitForFunction(`document.querySelector('[dl-test="translator-target-input"]').value`);
-    await this.page.deepl.waitForFunction(`document.querySelector('[dl-test="translator-target-input"]').value.length > 0`);
+    const isLoaded = await this.page.deepl.waitForFunction(`document.querySelector('[dl-test="translator-target-input"]').value`)
+      .then(() => true)
+      .catch(() => false);
+
+    if (!isLoaded)
+      return console.log(chalk.red('deepL: インプットが不正です'))
 
     const results =  await this.page.deepl.$$('.lmt__translations_as_text__text_btn')
     const suffix = results.length > 1 ? ` ...` : '';
@@ -65,8 +71,14 @@ class Translator {
 
   async translateByBaidu(targetText) {
     await this.page.baidu.goto(`${URL.baidu}${targetText}`);
-    await this.page.baidu.waitForFunction(`document.querySelector('.target-output')`);
-    await this.page.baidu.waitForFunction(`document.querySelector('.target-output > span')`);
+    const isLoaded = await this.page.baidu.waitForFunction(`document.querySelector('.target-output')`)
+      .then(() => true)
+      .catch(() => false);
+
+    if (!isLoaded)
+      return console.log(chalk.red('baidu: インプットが不正です'))
+
+    await this.page.baidu.waitForFunction(`document.querySelector('.target-output > span')`)
 
     const results = await this.page.baidu.$$('.target-output > span');
 
