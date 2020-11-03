@@ -3,10 +3,10 @@ import readline from 'readline';
 import chalk from 'chalk';
 
 const LANGUAGE_FROM = "zh";
-const DEFAULT_TIMEOUT = '15000';
+const DEFAULT_TIMEOUT = '25000';
 
 const URL = {
-  deepl: `https://www.deepl.com/ja/translator#${LANGUAGE_FROM}/ja/`,
+  deepl: `https://www.deepl.com/en/translator#${LANGUAGE_FROM}/ja/`,
   baidu: `https://fanyi.baidu.com/#${LANGUAGE_FROM}/jp/`
 };
 
@@ -52,7 +52,13 @@ class Translator {
   }
 
   async translateByDeepl(targetText) {
-    await this.page.deepl.goto(`${URL.deepl}${targetText}`);
+    const isAccessable = await this.page.deepl.goto(`${URL.deepl}${targetText}`)
+      .then(() => true)
+      .catch(() => false);
+
+    if (!isAccessable)
+      return console.log(chalk.red('deepL: ページにアクセスすることができませんでした'))
+
     await this.page.deepl.waitForFunction(`document.querySelector('[dl-test="translator-target-input"]')`);
     const isLoaded = await this.page.deepl.waitForFunction(`document.querySelector('[dl-test="translator-target-input"]').value`)
       .then(() => true)
@@ -70,7 +76,13 @@ class Translator {
   }
 
   async translateByBaidu(targetText) {
-    await this.page.baidu.goto(`${URL.baidu}${targetText}`);
+    const isAccessable = await this.page.baidu.goto(`${URL.baidu}${targetText}`)
+      .then(() => true)
+      .catch(() => false);
+
+    if (!isAccessable)
+      return console.log(chalk.red('baidu: ページにアクセスすることができませんでした'))
+
     const isLoaded = await this.page.baidu.waitForFunction(`document.querySelector('.target-output')`)
       .then(() => true)
       .catch(() => false);
